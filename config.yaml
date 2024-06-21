@@ -6,6 +6,20 @@ required_keys:
 - payloads
 unique_identifiers:
   achieves: What are you trying to achieve?
-  exploration: What type of exploration do you want to use?
-  method: What method of delivery do you want to use?
+  exploration: What type of exploration do you want to do?
+  method: What's the method of delivery?
   name: "Select a template to use:"
+unique_identifiers_help:
+  achieves: |
+    Hallucination is a type of attack in which you trick the LLM to think something that is not true, this might include making the LLM think that you are an admin or that you have access to a certain resource.
+    Technical Exploration is a type of attack in which you try to break the LLM back-end, this can result in unexpected behavior such as data leakage or a bridge to web exploitation.
+  exploration: |
+    Recon is a type of exploration in which you try to gather information about the LLM, this might include listing the APIs that the LLM can access, parameters, information about it's back-end and rules.
+    Exploit is a type of exploration in which you try to exploit vulnerabilities on the LLM model or back-end, such as IDOR, data leakage, path traversal, etc.
+    Extract is usually used after an exploit is found, it's a type of exploration in which you try to extract information from the LLM, this might include extracting sensitive information, data about users, files, etc.
+  method: |
+    There are two methods of delivery, direct and indirect.
+    On the direct method, the payload is sent directly to the LLM, via a prompt or a message for example.
+    On the indirect method, the payload is sent to the LLM via an external source, such as training data poisoning, or output from an API call.
+  name: |
+    Those are the available attacks, select one to use. Feel free to add more via YAML files and merge them with the original repository to help the community!
