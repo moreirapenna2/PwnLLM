@@ -8,4 +8,4 @@ unique_identifiers:
   achieves: What are you trying to achieve?
   exploration: What type of exploration do you want to use?
   method: What method of delivery do you want to use?
-  name: Select a template to use
+  name: "Select a template to use:"

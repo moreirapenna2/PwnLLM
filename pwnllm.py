@@ -7,6 +7,7 @@ def load_config():
 config = load_config()
 required_keys = config['required_keys']
 unique_identifiers = config['unique_identifiers']
+learn_mode = False
 
 @click.command()
 
@@ -24,6 +25,14 @@ def main():
     available_templates_stack = []
     unique_keys_stack = []
     
+    click.echo('''
+ _______                       _____     _____     ____    ____  
+|_   __ \                     |_   _|   |_   _|   |_   \  /   _| 
+  | |__) |_   _   __  _ .--.    | |       | |       |   \/   |   
+  |  ___/[ \ [ \ [  ][ `.-. |   | |   _   | |   _   | |\  /| |   
+ _| |_    \ \/\ \/ /  | | | |  _| |__/ | _| |__/ | _| |_\/_| |_  
+|_____|    \__/\__/  [___||__]|________||________||_____||_____| 
+''')
     click.echo('\nWelcome to Pwnllm!\n')
 
     # Iterates through the unique identifiers to create menus
@@ -34,7 +43,10 @@ def main():
         
         # If it's the last menu, show the available attacks and prompt the user for a selection
         if count == len(unique_identifiers)-1:
-            selection = create_menu(get_available_attacks(available_templates), "Select an attack to generate a payload", True)
+            if learn_mode:
+                selection = create_menu(get_available_attacks(available_templates), "Select an attack to learn about it:", True)
+            else:
+                selection = create_menu(get_available_attacks(available_templates), "Select an attack to generate a payload:", True)
             if selection is None:
                 # Goes to the previous menu
                 count-=1
@@ -42,7 +54,10 @@ def main():
                 available_templates = available_templates_stack.pop()
                 unique_keys = unique_keys_stack.pop()
                 continue
-            generate_payload(list(available_templates.values())[selection])
+            if learn_mode:
+                learn(list(available_templates.values())[selection])
+            else:
+                generate_payload(list(available_templates.values())[selection])
             continue
         else:
             selection = create_menu(unique_keys[identifier], unique_identifiers[identifier], False, count == 0)
@@ -66,6 +81,13 @@ def main():
         # Goes on to the next menu..
         count+=1
 
+def show_help():
+    print('''
+help - Shows this help message
+learn - Enters learning mode, showing information about each attack without generating payloads.
+attack - Enters attack mode, allowing you to generate payloads.
+exit - Exits the program.''')
+
 
 def create_menu(options, text=None, return_index=False, first=False):
     """
@@ -81,33 +103,46 @@ def create_menu(options, text=None, return_index=False, first=False):
         str or int or None: The selected option or its index. Returns None if the user chooses to exit or go back.
     """
     options = list(options)
-    
-    if text:
-        click.echo(f"\n{text}")
+    global learn_mode
 
-    for i, option in enumerate(options, 1):
-        click.echo(f"[{i}] {option}")
+    # uppercase the first letter of each option
+    pretty_options = [option[0].upper() + option[1:] for option in options]
 
-    # If it's the first menu, shows "Exit" instead of "Go back"
-    if first:
-        click.echo('[0] Exit')
-    else:
-        click.echo('[0] Go back')
-    
-    # Creating the prompt with right-shift of 1, so we don't start at 0 because it's weird for users
-    selection = click.prompt('> ', type=click.Choice([str(i) for i in range(1, len(options)+1)] + ['0'] + ['exit']), prompt_suffix='', show_choices=False)
-    
-    if selection == "0":
-        return None
-    elif selection == "exit":
-        print("Exiting..")
-        exit()
-    
-    # Returning the selection with left-shift of 1 to match the correct value
-    if return_index:
-        return int(selection)-1
-    
-    return options[int(selection)-1]
+    while True:
+        if text:
+            click.echo(f"\n{text}")
+
+        for i, option in enumerate(pretty_options, 1):
+            click.echo(f"[{i}] {option}")
+
+        # If it's the first menu, shows "Exit" instead of "Go back"
+        if first:
+            click.echo('[0] Exit')
+        else:
+            click.echo('[0] Go back')
+        
+        # Creating the prompt with right-shift of 1, so we don't start at 0 because it's weird for users
+        selection = click.prompt('> ', type=click.Choice([str(i) for i in range(1, len(options)+1)] + ['0', 'exit', 'learn', 'attack', 'help']), prompt_suffix='', show_choices=False).lower()
+        
+        if selection == "0":
+            return None
+        elif selection == "exit":
+            print("Exiting..")
+            exit()
+        elif selection == "learn":
+            learn_mode = True
+            print("You are now in the learning mode, payload generation is disabled. To exit learning mode, type 'attack' or restart the program.")
+        elif selection == "attack":
+            learn_mode = False
+            print("You are now in the attack mode, payload generation is enabled. Hack the planet!")
+        elif selection == "help":
+            show_help()
+        else:
+            # Returning the selection with left-shift of 1 to match the correct value
+            if return_index:
+                return int(selection)-1
+            
+            return options[int(selection)-1]
 
 
 def update_templates_choice(available_templates, key, selection):
@@ -164,10 +199,27 @@ def generate_payload(payload):
     Returns:
         None
     """
-    print(f"Generating payload: {payload['name']}")
+    print(f"Generating payload: {payload['name']}\n")
     for p in payload['payloads']:
         print(p)
 
+
+def learn(payload):
+    """
+    Show information about the given payload, including its name, description, and payloads.
+
+    Args:
+        payload (dict): A dictionary containing the payload information.
+
+    Returns:
+        None
+    """
+    print(f"Name: {payload['name']}\n")
+    print(f"Description: {payload['description']}\n")
+    print("Payloads:")
+    for p in payload['payloads']:
+        print(p)
+    print("About: ", payload['learn'])
 
 def load_yaml_files(directory):
     """
